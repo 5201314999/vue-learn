@@ -311,7 +311,7 @@ function createWatcher(
   }
   return vm.$watch(expOrFn, handler, options)
 }
-
+// 原型增加了 $watch,$set，$delete 方法
 export function stateMixin(Vue: Class<Component>) {
   // flow somehow has problems with directly declared definition object
   // when using Object.defineProperty, so we have to procedurally build up
@@ -332,27 +332,38 @@ export function stateMixin(Vue: Class<Component>) {
       warn(`$props is readonly.`, this)
     }
   }
+  // 设置data,prop 的对象反问，es5 写法，es6 的话会使用 proxy ，具备深层次劫持，支持数组等功能
   Object.defineProperty(Vue.prototype, '$data', dataDef)
   Object.defineProperty(Vue.prototype, '$props', propsDef)
 
   Vue.prototype.$set = set
   Vue.prototype.$delete = del
 
+  // 新增一个键路径字符串或者函数的监听方式
+  /**
+   * cb 如果是对象的话，结构为{handler:fn},可参考vue api watch 传参
+   * 注意：$watch 和 实例的watch 属性传参有区别
+   * 核心是创建watcher 实例
+   */
   Vue.prototype.$watch = function (
     expOrFn: string | Function,
     cb: any,
     options?: Object
   ): Function {
     const vm: Component = this
+    // 如果cb是一个对象
     if (isPlainObject(cb)) {
+      // 对cb 做处理解析出实际的回调函数handler后调用$watch
       return createWatcher(vm, expOrFn, cb, options)
     }
     options = options || {}
     options.user = true
+    // 必须先理解响应式系统的设计
     const watcher = new Watcher(vm, expOrFn, cb, options)
     if (options.immediate) {
       cb.call(vm, watcher.value)
     }
+    // 返回一个取消监听的函数
     return function unwatchFn() {
       watcher.teardown()
     }

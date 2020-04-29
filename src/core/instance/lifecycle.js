@@ -26,13 +26,14 @@ export function initLifecycle (vm: Component) {
 
   // locate first non-abstract parent
   let parent = options.parent
+  //找到非抽象的父系组件，建立父子关系 （具体场景尚未清楚是哪种）
   if (parent && !options.abstract) {
     while (parent.$options.abstract && parent.$parent) {
       parent = parent.$parent
     }
     parent.$children.push(vm)
   }
-
+  // 为实例设置多个可访问属性和内部属性
   vm.$parent = parent
   vm.$root = parent ? parent.$root : vm
 
@@ -46,7 +47,7 @@ export function initLifecycle (vm: Component) {
   vm._isDestroyed = false
   vm._isBeingDestroyed = false
 }
-// 给vue 构造函数混合了_update 方法
+// 给vue 构造函数混合了destroy，forceUpdate,_update方法, 触发beforeDestroy，destroyed事件
 export function lifecycleMixin (Vue: Class<Component>) {
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
@@ -312,6 +313,7 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
+// 生命周期钩子系统（其实也是事件发布订阅的）
 export function callHook (vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
   pushTarget()
