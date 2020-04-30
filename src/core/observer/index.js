@@ -34,6 +34,7 @@ export function toggleObserving (value: boolean) {
  * object's property keys into getter/setters that
  * collect dependencies and dispatch updates.
  */
+// Observer 绑定到每一个响应式对象。利用Ojbect.defineProperty getter收集依赖，setter进行数据劫持和发布更新。
 export class Observer {
   value: any;
   dep: Dep;
@@ -43,8 +44,11 @@ export class Observer {
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
+    // 把ob 实例挂靠到__ob__ 监测对象上
     def(value, '__ob__', this)
+    // 数组的处理
     if (Array.isArray(value)) {
+      // chrome 下也不可以访问这里?有点尴尬
       if (hasProto) {
         protoAugment(value, arrayMethods)
       } else {
@@ -52,6 +56,7 @@ export class Observer {
       }
       this.observeArray(value)
     } else {
+      // 遍历对象，提取属性，转化成getter/setter
       this.walk(value)
     }
   }
@@ -131,6 +136,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 
 /**
  * Define a reactive property on an Object.
+ * 在对象上定义可响应的属性，通俗的说，就是为对象配置getter/setter
  */
 export function defineReactive (
   obj: Object,
@@ -140,7 +146,7 @@ export function defineReactive (
   shallow?: boolean
 ) {
   const dep = new Dep()
-
+  // es5 返回对象自有属性，如 writable,configurable,get,set,enumerable 
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
     return
