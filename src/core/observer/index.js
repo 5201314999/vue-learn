@@ -112,6 +112,7 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
  */
+// 为一个值创建一个observer 实例
 export function observe (value: any, asRootData: ?boolean): Observer | void {
   if (!isObject(value) || value instanceof VNode) {
     return
@@ -136,7 +137,8 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 
 /**
  * Define a reactive property on an Object.
- * 在对象上定义可响应的属性，通俗的说，就是为对象配置getter/setter
+ * 在对象上定义可响应的属性，通俗的说，核心是为对象配置getter/setter
+ * shallow 应该是某些场景某个属性不需要递归执行
  */
 export function defineReactive (
   obj: Object,
@@ -158,7 +160,7 @@ export function defineReactive (
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
-
+  
   let childOb = !shallow && observe(val)
   Object.defineProperty(obj, key, {
     enumerable: true,
@@ -166,6 +168,7 @@ export function defineReactive (
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
+        // 订阅对象收集了一个依赖，呜呜呜，这里换成我来写，（优先考虑丢到watcher 里， 直脑回路,源码其实多增加了一层depend 里面再执行Watcher.addDep）
         dep.depend()
         if (childOb) {
           childOb.dep.depend()

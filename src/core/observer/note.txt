@@ -1,1 +1,11 @@
 双向绑定相应系统代码，数据劫持，发布订阅模式
+
+
+Dep 类 手机订阅对象
+
+Wathcher 类， 添加多个依赖类
+
+defineReactive 为属性增加getter/setter
+
+数组另外处理
+
