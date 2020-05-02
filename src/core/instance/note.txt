@@ -1,0 +1,5 @@
+vue 构造函数相关的代码
+
+
+state.js 后续需再看一遍
+还需搞懂的函数 set() defineReactive()。

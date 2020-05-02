@@ -34,6 +34,7 @@ export function toggleObserving (value: boolean) {
  * object's property keys into getter/setters that
  * collect dependencies and dispatch updates.
  */
+// Observer 绑定到每一个响应式对象。利用Ojbect.defineProperty getter收集依赖，setter进行数据劫持和发布更新。
 export class Observer {
   value: any;
   dep: Dep;
@@ -43,8 +44,11 @@ export class Observer {
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
+    // 把ob 实例挂靠到__ob__ 监测对象上
     def(value, '__ob__', this)
+    // 数组的处理
     if (Array.isArray(value)) {
+      // chrome 下也不可以访问这里?有点尴尬
       if (hasProto) {
         protoAugment(value, arrayMethods)
       } else {
@@ -52,6 +56,7 @@ export class Observer {
       }
       this.observeArray(value)
     } else {
+      // 遍历对象，提取属性，转化成getter/setter
       this.walk(value)
     }
   }
@@ -107,6 +112,7 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
  * returns the new observer if successfully observed,
  * or the existing observer if the value already has one.
  */
+// 为一个值创建一个observer 实例
 export function observe (value: any, asRootData: ?boolean): Observer | void {
   if (!isObject(value) || value instanceof VNode) {
     return
@@ -131,6 +137,8 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
 
 /**
  * Define a reactive property on an Object.
+ * 在对象上定义可响应的属性，通俗的说，核心是为对象配置getter/setter
+ * shallow 应该是某些场景某个属性不需要递归执行
  */
 export function defineReactive (
   obj: Object,
@@ -140,7 +148,7 @@ export function defineReactive (
   shallow?: boolean
 ) {
   const dep = new Dep()
-
+  // es5 返回对象自有属性，如 writable,configurable,get,set,enumerable 
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
     return
@@ -152,7 +160,7 @@ export function defineReactive (
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
-
+  
   let childOb = !shallow && observe(val)
   Object.defineProperty(obj, key, {
     enumerable: true,
@@ -160,6 +168,7 @@ export function defineReactive (
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
+        // 订阅对象收集了一个依赖，呜呜呜，这里换成我来写，（优先考虑丢到watcher 里， 直脑回路,源码其实多增加了一层depend 里面再执行Watcher.addDep）
         dep.depend()
         if (childOb) {
           childOb.dep.depend()
@@ -199,20 +208,24 @@ export function defineReactive (
  * already exist.
  */
 export function set (target: Array<any> | Object, key: any, val: any): any {
+  // 开发环境，target 为空 或者基础类型，弹出警告
   if (process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  // 更新数组
   if (Array.isArray(target) && isValidArrayIndex(key)) {
     target.length = Math.max(target.length, key)
     target.splice(key, 1, val)
     return val
   }
+  // 设置对象属性
   if (key in target && !(key in Object.prototype)) {
     target[key] = val
     return val
   }
+  // 暂时还没看太明白，响应式更新内容
   const ob = (target: any).__ob__
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(

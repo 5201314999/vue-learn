@@ -1,5 +1,6 @@
 /* @flow */
 
+// 通过ast 生成 render 函数
 import { genHandlers } from './events'
 import baseDirectives from '../directives/index'
 import { camelize, no, extend } from 'shared/util'

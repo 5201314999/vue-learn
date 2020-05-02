@@ -10,6 +10,7 @@ let uid = 0
  * A dep is an observable that can have multiple
  * directives subscribing to it.
  */
+// 依赖类， 里面有一个subs 数组放置订阅对象，dep 实例的id ，当前订阅对象
 export default class Dep {
   static target: ?Watcher;
   id: number;
@@ -27,13 +28,14 @@ export default class Dep {
   removeSub (sub: Watcher) {
     remove(this.subs, sub)
   }
-
+  
+  // 把依赖挂靠到当前对象上
   depend () {
     if (Dep.target) {
       Dep.target.addDep(this)
     }
   }
-
+  
   notify () {
     // stabilize the subscriber list first
     const subs = this.subs.slice()
@@ -52,6 +54,7 @@ export default class Dep {
 // the current target watcher being evaluated.
 // this is globally unique because there could be only one
 // watcher being evaluated at any time.
+// 多个vue 实例全局还是只能只有一个订阅对象。
 Dep.target = null
 const targetStack = []
 
