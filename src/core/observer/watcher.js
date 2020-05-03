@@ -23,6 +23,7 @@ let uid = 0
  * and fires callback when the expression value changes.
  * This is used for both the $watch() api and directives.
  */
+// active 表示 watcher 是否可用， 其他都是围绕 deps 维护而设置。 unwatch 时从 deps 销毁自身
 export default class Watcher {
   vm: Component;
   expression: string;
@@ -128,7 +129,7 @@ export default class Watcher {
   addDep (dep: Dep) {
     const id = dep.id
     if (!this.newDepIds.has(id)) {
-      // newDeps不存在dep ,执行 push 操作
+      // newDeps不存在dep ,执行 push 操作,同时挂depId 和 newDepId，后续需要了解他们的用处
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) {

@@ -24,6 +24,7 @@ const methodsToPatch = [
 methodsToPatch.forEach(function (method) {
   // cache original method
   const original = arrayProto[method]
+  // api 重新实现
   def(arrayMethods, method, function mutator (...args) {
     const result = original.apply(this, args)
     const ob = this.__ob__
@@ -37,8 +38,9 @@ methodsToPatch.forEach(function (method) {
         inserted = args.slice(2)
         break
     }
+    // 有长度变化时特化处理
     if (inserted) ob.observeArray(inserted)
-    // notify change
+    // notify change ，修改时通知订阅者更新
     ob.dep.notify()
     return result
   })

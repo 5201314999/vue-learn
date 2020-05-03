@@ -1,11 +1,20 @@
 双向绑定相应系统代码，数据劫持，发布订阅模式
 
+observe() 产生 Observer 实例 响应式属性。其实也是发布主题的过程 ，每个ob 实例都有一个dep 
 
-Dep 类 手机订阅对象
+watch() 产生 Watcher 实例
 
-Wathcher 类， 添加多个依赖类
+Watcher 是调用 watch 函数产生的，它保存着 callback 并且维护了一个数组，数组存放了所有 存有这个 Watcher 的 Dep 。这样当这个 Watcher 需要被删除时，可以遍历数组，从各个 Dep 中删去自身，也就是 unwatch 的过程
 
-defineReactive 为属性增加getter/setter
+Dep 类
 
-数组另外处理
+
+问题：何时怎么把 Watcher 放入 dep 中
+
+
+observe===> observer => defineReactive  收集依赖
+
+注意：（妙啊）
+
+规定一个全局变量，平常是 null ，当在决定某个 Watcher 该放入哪些 Dep 的时候（即 依赖收集 阶段），让这个全局变量指向这个 Watcher 。然后 touch 被监视的那个键，换言之，对那个键求值。途中会调用一连串的 getter ，往那些 getter 所对应的 Dep 里放入这个 Watcher 就对了。之后再将全局变量改回 null 。
 

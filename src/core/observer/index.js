@@ -35,6 +35,8 @@ export function toggleObserving (value: boolean) {
  * collect dependencies and dispatch updates.
  */
 // Observer 绑定到每一个响应式对象。利用Ojbect.defineProperty getter收集依赖，setter进行数据劫持和发布更新。
+// 一个值，一个依赖，还有一个记录商量，被几个vue 实例公用
+// 实际是发布主题的过程，创建dep
 export class Observer {
   value: any;
   dep: Dep;
@@ -77,7 +79,9 @@ export class Observer {
    * Observe a list of Array items.
    */
   observeArray (items: Array<any>) {
+    // 设置l = items.length 防止数组的长度中途发生变化
     for (let i = 0, l = items.length; i < l; i++) {
+      // 直接观察元素
       observe(items[i])
     }
   }
@@ -139,6 +143,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
  * Define a reactive property on an Object.
  * 在对象上定义可响应的属性，通俗的说，核心是为对象配置getter/setter
  * shallow 应该是某些场景某个属性不需要递归执行
+ * 
  */
 export function defineReactive (
   obj: Object,
@@ -157,11 +162,18 @@ export function defineReactive (
   // cater for pre-defined getter/setters
   const getter = property && property.get
   const setter = property && property.set
+  // 出现障碍（查阅资料，解释如下）
+  // 如果 arguments 长为3，参数 val 存在，就认为是显式地设置了这个键的值，原来的值就不考虑了
+  // 如果 getter setter 都存在，就认为这对 getter/setter 是在代理某个真实值，所以需要 val = obj[key]，然后 let childOb = observe(val) 对这个真实值继续进行递归设置
+  // 否则 如果 getter 存在，setter 不存在，认为 getter 大概只是返回某个生成的值，不执行 val = obj[key]，也就导致下面 let childOb = observe(undefined)
+  // getter 不存在，setter 存在，这类奇葩事情不在考虑范围内（例如 document.cookie）
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
   
   let childOb = !shallow && observe(val)
+
+  // 为对象的属性提供getter/setter ，添加依赖，发布更新
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
@@ -172,6 +184,7 @@ export function defineReactive (
         dep.depend()
         if (childOb) {
           childOb.dep.depend()
+          // 数组依赖只能监听到整个数组引用地址的变化，数组内部的改变必须另外手动监听
           if (Array.isArray(value)) {
             dependArray(value)
           }
@@ -281,6 +294,8 @@ export function del (target: Array<any> | Object, key: any) {
 function dependArray (value: Array<any>) {
   for (let e, i = 0, l = value.length; i < l; i++) {
     e = value[i]
+    // 需要相应的数据都有__ob__ 实例，为每个选项添加依赖, ？？？ 难道是遍历的过程中，Dep.target 会指向当前的__ob__
+    console.log(Dep.target)
     e && e.__ob__ && e.__ob__.dep.depend()
     if (Array.isArray(e)) {
       dependArray(e)
