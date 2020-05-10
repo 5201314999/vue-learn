@@ -3,6 +3,8 @@ node_modules
 *.log
 explorations
 TODOs.md
+dist/
+packages/
 dist/*.gz
 dist/*.map
 dist/vue.common.min.js
