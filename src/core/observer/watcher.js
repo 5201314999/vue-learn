@@ -129,7 +129,7 @@ export default class Watcher {
   addDep (dep: Dep) {
     const id = dep.id
     if (!this.newDepIds.has(id)) {
-      // newDeps不存在dep ,执行 push 操作,同时挂depId 和 newDepId，后续需要了解他们的用处
+      // newDeps不存在dep ,执行 push 操作,同时挂depId 和 newDepId，后续需要了解他们的用处（用处是删除时作比较使用）
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) {
@@ -139,7 +139,7 @@ export default class Watcher {
   }
 
   /**
-   * Clean up for dependency collection.
+   * Clean up for dependency collection. 从 newDeps 中不存在而 deps 中存在的依赖中删除自身，举实际场景例子是?(updateComponent 中明显重新收集了依赖)
    */
   cleanupDeps () {
     let i = this.deps.length
@@ -155,6 +155,7 @@ export default class Watcher {
     this.newDepIds.clear()
     tmp = this.deps
     this.deps = this.newDeps
+    // 这句不如直接设置this.newDeps=[]??
     this.newDeps = tmp
     this.newDeps.length = 0
   }
@@ -225,7 +226,7 @@ export default class Watcher {
   }
 
   /**
-   * Remove self from all dependencies' subscriber list.
+   * Remove self from all dependencies' subscriber list. (从所有依赖中删除自己)
    */
   teardown () {
     if (this.active) {

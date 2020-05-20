@@ -57,7 +57,7 @@ export function renderMixin (Vue: Class<Component>) {
   Vue.prototype.$nextTick = function (fn: Function) {
     return nextTick(fn, this)
   }
-
+  // _render 函数生成render
   Vue.prototype._render = function (): VNode {
     const vm: Component = this
     const { render, _parentVnode } = vm.$options
@@ -80,6 +80,7 @@ export function renderMixin (Vue: Class<Component>) {
     // render self
     let vnode
     try {
+      // 核心
       vnode = render.call(vm._renderProxy, vm.$createElement)
     } catch (e) {
       handleError(e, vm, `render`)

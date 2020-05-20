@@ -138,6 +138,7 @@ export function mountComponent (
   hydrating?: boolean
 ): Component {
   vm.$el = el
+  // 如果没有render 函数,说明出错了（ 挂载之前最终都是会转成render 函数的）
   if (!vm.$options.render) {
     vm.$options.render = createEmptyVNode
     if (process.env.NODE_ENV !== 'production') {

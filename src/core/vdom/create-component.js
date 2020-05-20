@@ -97,7 +97,7 @@ const componentVNodeHooks = {
 }
 
 const hooksToMerge = Object.keys(componentVNodeHooks)
-
+// 生成vndoe
 export function createComponent (
   Ctor: Class<Component> | Function | Object | void,
   data: ?VNodeData,
@@ -106,6 +106,10 @@ export function createComponent (
   tag?: string
 ): VNode | Array<VNode> | void {
   if (isUndef(Ctor)) {
+
+
+
+    
     return
   }
 
@@ -185,7 +189,7 @@ export function createComponent (
   // install component management hooks onto the placeholder node
   installComponentHooks(data)
 
-  // return a placeholder vnode
+  // return a placeholder vnode  
   const name = Ctor.options.name || tag
   const vnode = new VNode(
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,

@@ -1,20 +1,35 @@
-双向绑定相应系统代码，数据劫持，发布订阅模式
+响应式原理
 
-observe() 产生 Observer 实例 响应式属性。其实也是发布主题的过程 ，每个ob 实例都有一个dep 
+数据劫持，发布者订阅模式
 
-watch() 产生 Watcher 实例
+1. observe
+
+initState => observe(data, true /* asRootData */) 
+
+生成dep ，对data 所有属性设置getter/setter （Object.defineProperty)，数据劫持
+
+observe() 产生 Observer __ob__实例 响应式属性。其实也是发布主题的过程 ，每个ob 实例创建一个dep 
+
+observe===> observer => defineReactive  收集依赖
+
+
+2. Watcher 
+
+每一个组件实例会生成一个watcher， 里面有一个依赖放置用到的property，watch() 产生 Watcher 实例. 订阅对象，里面有一个callback 更新,
 
 Watcher 是调用 watch 函数产生的，它保存着 callback 并且维护了一个数组，数组存放了所有 存有这个 Watcher 的 Dep 。这样当这个 Watcher 需要被删除时，可以遍历数组，从各个 Dep 中删去自身，也就是 unwatch 的过程
 
-Dep 类
+重难点问题：一个实例产生一个watcher 还是一个数据访问就产生一个watcher 
 
+3. Dep 类
 
-问题：何时怎么把 Watcher 放入 dep 中
+放置订阅对象
 
+问题：怎么把 Watcher 放入 dep 中 ,get 过程中。 
 
-observe===> observer => defineReactive  收集依赖
 
 注意：（妙啊）
 
 规定一个全局变量，平常是 null ，当在决定某个 Watcher 该放入哪些 Dep 的时候（即 依赖收集 阶段），让这个全局变量指向这个 Watcher 。然后 touch 被监视的那个键，换言之，对那个键求值。途中会调用一连串的 getter ，往那些 getter 所对应的 Dep 里放入这个 Watcher 就对了。之后再将全局变量改回 null 。
 
+其他： Object.defineProperty 数组和对象变化无法监听，vue 框架是怎么解决这问题的 (不是直接覆盖 Array 原型的api，而是拷贝了一份方法扩充，只覆盖响应式数组的原型)。提供了$set 方法

@@ -30,6 +30,7 @@ stateMixin(Vue)
 eventsMixin(Vue)
 // 注入$destroy，$forceUpdate,_update,事件的销毁和更新，$mount 不在此文件，跟平台相关 实例方法/生命周期
 lifecycleMixin(Vue)
+// 注入$nextTick,_render 方法  
 renderMixin(Vue)
 
 export default Vue

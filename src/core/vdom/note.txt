@@ -1,1 +1,36 @@
 虚拟dom 和 打补丁（patching） 的相关代码
+
+
+patch 
+
+1. mounted 时创建watcher 会执行一次patch（对dom 进行打补丁，这一次直接使用 vnode 创建新元素）
+2. 如果新旧vnode 都存在的话，且是同一个vnode ，又不是dom 节点，那么就执行patchVnode() 对vnode 进行比较修改
+3. 其他情况，新旧vnode 都存在的话，大部分是创建或者删除vnode。
+
+patchVnode()
+
+1. 对新旧节点根级进行比较，有好几种情况（具体？）
+
+2. 如果都有children 的话进行updateChildren的操作
+
+
+updateChildren()
+
+头尾比较，头头、尾尾，头尾，尾头
+
+取nCh 第一个节点去och 找是否存在sameVnode, 有则进行patchVnode() 操作，（key 的作用就是在sameVnode 中判断起作用以及 做key-index 关联，便于此步骤快速判断是否存在sameVnode)
+
+结束标志：直到2个数组一方遍历完，处理剩下的一方。
+
+举一反三：
+
+ 简单写个流程demo？
+
+ 何时修改真正的dom 树？ 调用cb 里的钩子函数，（头尾，尾头时）
+
+ 头尾比较的设计？
+
+ 当v-for 数组增加时，怎么会创建出新元素呢？ （是否要看下v-for=“” 指令的实现，猜测：重新更新_vnode,收集依赖，再执行patch 修补节点，key 相同的会被判断为同一个节点，进行dom 的复用）
+
+
+

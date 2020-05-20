@@ -37,7 +37,7 @@ function childrenIgnored (vnode) {
     vnode.data.domProps.innerHTML || vnode.data.domProps.textContent
   )
 }
-
+// key 用于快速判断节点是否相同
 function sameVnode (a, b) {
   return (
     a.key === b.key && (
@@ -74,6 +74,10 @@ function createKeyToOldIdx (children, beginIdx, endIdx) {
   return map
 }
 
+// 返回一个patch 函数，内部编写了多个局部函数，代码量700行左右 backend {nodeOps,modules}
+// nodeOps上封装了针对各种平台对于DOM的操作，modules表示各种模块，
+// 这些模块都提供了create和update钩子，用于创建完成和更新完成后处理对应的模块;
+// 有些模块还提供了activate、remove、destory等钩子。
 export function createPatchFunction (backend) {
   let i, j
   const cbs = {}
@@ -128,7 +132,7 @@ export function createPatchFunction (backend) {
   }
 
   let creatingElmInVPre = 0
-
+  // 创建vnode.elm
   function createElm (
     vnode,
     insertedVnodeQueue,
@@ -427,7 +431,7 @@ export function createPatchFunction (backend) {
     if (process.env.NODE_ENV !== 'production') {
       checkDuplicateKeys(newCh)
     }
-
+    // 新旧vnode 数组 都还没遍历完
     while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
       if (isUndef(oldStartVnode)) {
         oldStartVnode = oldCh[++oldStartIdx] // Vnode has been moved left
@@ -525,6 +529,7 @@ export function createPatchFunction (backend) {
     // note we only do this if the vnode is cloned -
     // if the new node is not cloned it means the render functions have been
     // reset by the hot-reload-api and we need to do a proper re-render.
+    // 处理静态节点
     if (isTrue(vnode.isStatic) &&
       isTrue(oldVnode.isStatic) &&
       vnode.key === oldVnode.key &&
@@ -542,6 +547,9 @@ export function createPatchFunction (backend) {
 
     const oldCh = oldVnode.children
     const ch = vnode.children
+    // 如果节点是可patch 的话，
+    // 调用组件的prepatch钩子
+    // 调用update 钩子更新
     if (isDef(data) && isPatchable(vnode)) {
       for (i = 0; i < cbs.update.length; ++i) cbs.update[i](oldVnode, vnode)
       if (isDef(i = data.hook) && isDef(i = i.update)) i(oldVnode, vnode)
@@ -570,6 +578,7 @@ export function createPatchFunction (backend) {
     }
   }
 
+  // insertedVnodeQueue 放着一堆要调用insert 钩子函数的vnode
   function invokeInsertHook (vnode, queue, initial) {
     // delay insert hooks for component root nodes, invoke them after the
     // element is really inserted
@@ -693,26 +702,37 @@ export function createPatchFunction (backend) {
       return node.nodeType === (vnode.isComment ? 8 : 3)
     }
   }
-
+  // diff 算法
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
+    // 新节点不存在 处理旧节点，然后直接返回
     if (isUndef(vnode)) {
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)
       return
     }
-
+    
     let isInitialPatch = false
     const insertedVnodeQueue = []
+    // 新节点存在时看旧节点情况
 
+    // 旧节点不存在，直接创建元素（首次patch）
     if (isUndef(oldVnode)) {
       // empty mount (likely as component), create new root element
       isInitialPatch = true
       createElm(vnode, insertedVnodeQueue)
     } else {
+      // 新旧都存在（isRealElement 是否dom 节点）
       const isRealElement = isDef(oldVnode.nodeType)
+      // 不是真正的 dom 元素 且 新旧是同一个节点() 说的应该是组件节点
       if (!isRealElement && sameVnode(oldVnode, vnode)) {
-        // patch existing root node
+        // patch existing root node 修补根节点，只有这种情况修改，其他创建或删除
         patchVnode(oldVnode, vnode, insertedVnodeQueue, removeOnly)
       } else {
+        // 网上参考：如果老节点是真实DOM，创建对应的vnode节点
+
+        // 为新的Vnode创建元素/组件实例，若parentElm存在，则插入到父元素上
+        // 如果组件根节点被替换，遍历更新父节点element。然后移除老节点
+
+          // 旧节点是dom 元素 ，下面的看不太懂,大概是创建对应的vnode
         if (isRealElement) {
           // mounting to a real element
           // check if this is server-rendered content and if we can perform
@@ -737,14 +757,15 @@ export function createPatchFunction (backend) {
           }
           // either not server-rendered, or hydration failed.
           // create an empty node and replace it
+          
           oldVnode = emptyNodeAt(oldVnode)
         }
-
+        
         // replacing existing element
         const oldElm = oldVnode.elm
         const parentElm = nodeOps.parentNode(oldElm)
 
-        // create new node
+        // create new node 为新节点创建一个元素/实例
         createElm(
           vnode,
           insertedVnodeQueue,
@@ -754,7 +775,7 @@ export function createPatchFunction (backend) {
           oldElm._leaveCb ? null : parentElm,
           nodeOps.nextSibling(oldElm)
         )
-
+        
         // update parent placeholder node element, recursively
         if (isDef(vnode.parent)) {
           let ancestor = vnode.parent

@@ -133,6 +133,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
   ) {
     ob = new Observer(value)
   }
+  //vmCount 表示vue 实例使用次数 
   if (asRootData && ob) {
     ob.vmCount++
   }
@@ -294,7 +295,6 @@ export function del (target: Array<any> | Object, key: any) {
 function dependArray (value: Array<any>) {
   for (let e, i = 0, l = value.length; i < l; i++) {
     e = value[i]
-    // 需要相应的数据都有__ob__ 实例，为每个选项添加依赖, ？？？ 难道是遍历的过程中，Dep.target 会指向当前的__ob__
     console.log(Dep.target)
     e && e.__ob__ && e.__ob__.dep.depend()
     if (Array.isArray(e)) {
